@@ -1,0 +1,1 @@
+# odoo-table-dashboard
