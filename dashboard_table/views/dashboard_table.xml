@@ -1,0 +1,181 @@
+<odoo>
+
+  <!-- Dashboard Table Search View-->
+  <record id="view_dashboard_table_search" model="ir.ui.view">
+      <field name="name">Dashboard Table Search</field>
+      <field name="model">res.dashboard.table</field>
+      <field name="arch" type="xml">
+          <search>
+            <field name="model_id"/>
+            <field name="module_id"/>
+            <field name="name"/>
+            <filter name="group_by_module" string="Module" context="{'group_by':'module_id'}"/>
+          </search>
+      </field>
+  </record>
+
+  <!-- Dashboard Table Tree View-->
+  <record id="view_dashboard_table_tree" model="ir.ui.view">
+    <field name="name">Dashboard Table Tree</field>
+    <field name="model">res.dashboard.table</field>
+    <field name="arch" type="xml">
+      <tree>
+        <field name="sequence" widget="handle"/>
+        <field name="name"/>
+        <field name="module_id"/>
+        <field name="model_id"/>
+        <field name="row_field_id"/>
+        <field name="column_field_ids" widget="many2many_tags"/>
+        <field name="domain"/>
+      </tree>
+    </field>
+  </record>
+
+  <!-- Dashboard Table Form View -->
+  <record id="view_dashboard_table_form" model="ir.ui.view">
+        <field name="name">Dashboard Table Form</field>
+        <field name="model">res.dashboard.table</field>
+        <field name="arch" type="xml">
+            <form>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="module_id" required="1" options="{'no_create':True,'no_quick_create':True}"/>
+                            <field name="model_id" required="1" options="{'no_create':True,'no_quick_create':True}"/>
+                            <label for="row_field_id" class="oe_inline"/>
+                            <div>
+                              <field name="row_field_id" domain="[('model_id','=',model_id),('ttype','in',['selection','many2one'])]" required="1" placeholder="Select Row Field" options="{'no_create':True,'no_quick_create':True}" class="oe_inline"/>
+                              <field name="row_field_values" placeholder="Comma Seperated values" class="oe_inline"/>
+                            </div>
+                            <field name="parent_menu_id" required="1" options="{'no_create':True,'no_quick_create':True}" domain="[('parent_id','=',False)]"/>
+                            <field name="domain" placeholder="e.g, [('paid', '=', True)]"/>
+                        </group>
+                        <group>
+                            <field name="name" required="1"/>
+                            <field name="column_field_ids" domain="[('model_id','=',model_id),('ttype','in',['float','integer','monetary'])]" placeholder="Select Column Fields" widget="many2many_tags" options="{'no_create':True,'no_quick_create':True}"/>
+                            <field name="color"/>
+                        </group>
+                    </group>
+                    <notebook>
+                        <page string="Security Settings">
+                            <group>
+                                <group>
+                                    <field name="group_ids" widget="many2many_tags" options="{'no_create':True,'no_quick_create':True}"/>
+                                    <field name="user_ids" widget="many2many_tags" options="{'no_create':True,'no_quick_create':True}"/>
+                                </group>
+                                <group></group>
+                            </group>
+                        </page>
+                        <page string="Data">
+                            <field name="menu_id" readonly="1"/>
+                            <field name="table_data"/>
+                        </page>
+                    </notebook>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_dashboard_table_kanban" model="ir.ui.view">
+        <field name="name">Dashboard Table Kanban</field>
+        <field name="model">res.dashboard.table</field>
+        <field name="arch" type="xml">
+            <kanban create="false" class="oe_background_grey o_kanban_dashboard o_account_kanban">
+                <field name="id"/>
+                <field name="name"/>
+                <field name="module_id"/>
+                <field name="column_field_ids"/>
+                <field name="row_field_id"/>
+                <field name="color"/>
+                <field name="table_data"/>
+                <field name="model_id"/>
+                <templates>
+                    <t t-name="kanban-box">
+                        <t t-value="JSON.parse(record.table_data.raw_value)" t-set="table"/>
+                        <div t-attf-class="#{kanban_color(record.color.raw_value)}">
+                            <div class="container o_kanban_card_content">
+                                <div class="row">
+                                    <div t-attf-class="o_kanban_card_header">
+                                        <div class="o_kanban_card_header_title">
+                                            <div class="o_primary" style="background-color:white;"><span style="color:darkcyan;"><t t-esc="record.name.value"/></span></div>
+                                        </div>
+                                        <div class="o_kanban_manage_button_section">
+                                            <a class="o_kanban_manage_toggle_button" href="#"><i class="fa fa-ellipsis-v"/></a>
+                                        </div>
+                                    </div>
+                                    <t t-if="table.rows">
+                                        <table class="table table-bordered">
+                                            <tr style="background-color: #55608f;color:white;font-family: auto;font-size: initial;">
+                                                <th><t t-esc="table.field_name"/></th>
+                                                <th>Count</th>
+                                                <t t-as="column_field" t-foreach="table.rows[0].columns">
+                                                    <th><span t-esc="column_field.column_field"/> </th>
+                                                </t>
+                                            </tr>
+                                            <t t-foreach="table.rows" t-as="rows_data">
+                                                <tr style="font-family: auto;">
+                                                    <td style="background-color:cadetblue;"><a t-att-href="rows_data.data_url"><span style="color:bisque;font-weight:bold;"><t t-esc="rows_data.field"/></span></a></td>
+                                                    <td style="text-align:center;"><a t-att-href="rows_data.data_url"><span style="color:teal;"><t t-esc="rows_data.count"/> </span></a></td>
+                                                    <t t-if="rows_data.columns">
+                                                        <t t-as="column" t-foreach="rows_data.columns">
+                                                            <td style="font-family:math;color:teal;font-weight:400;text-align:center"><span t-esc="column.amount"/></td>
+                                                        </t>
+                                                    </t>
+                                                </tr>
+                                            </t>
+                                            <tr style="background-color:aliceblue">
+                                                <td style="font-weight:bold;color:darkcyan">Totals</td>
+                                                <td style="font-weight:bold;color:darkcyan;text-align:center"><span t-esc="table.count_total"/></td>
+                                                <t t-if="table.column_totals">
+                                                    <t t-foreach="table.column_totals" t-as="total">
+                                                        <td style="font-weight:bold;color:darkcyan;text-align:center"><span t-esc="total"/> </td>
+                                                    </t>
+                                                </t>
+                                            </tr>
+                                        </table>
+                                    </t>
+                                </div>
+                            </div>
+
+                           <div class="container o_kanban_card_manage_pane">
+                                <div class="row">
+                                    <div class="col-xs-4 o_kanban_card_manage_section o_kanban_manage_view">
+                                        <div class="o_kanban_card_manage_title">
+                                            <span>View</span>
+                                        </div>
+
+                                        <div>
+                                            <a name="open_records" type="action">Records</a>
+                                        </div>
+                                    </div>
+                                    <div class="col-xs-4 o_kanban_card_manage_section o_kanban_manage_new">
+                                        <div class="o_kanban_card_manage_title">
+                                            <span>New</span>
+                                        </div>
+
+                                        <div>
+                                            <a name="new_record" type="object">Record</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div t-if="widget.editable" class="o_kanban_card_manage_settings row">
+                                    <div class="col-xs-8">
+                                        <ul class="oe_kanban_colorpicker" data-field="color"/>
+                                    </div>
+                                    <div class="col-xs-4 text-right">
+                                        <a type="edit">Settings</a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </t>
+                </templates>
+            </kanban>
+        </field>
+    </record>
+
+  <act_window id="action_res_dashboard_table" name="Dashboard Table" res_model="res.dashboard.table" view_mode="tree,kanban,form" context="{'search_default_group_by_module':1}"/>
+  <menuitem id="menu_res_dashboard_table_main" name="Dashboard Table" parent="base.menu_administration" sequence="1"/>
+  <menuitem id="menu_res_dashboard_table" name="Tables" action="action_res_dashboard_table" parent="menu_res_dashboard_table_main"/>
+</odoo>
